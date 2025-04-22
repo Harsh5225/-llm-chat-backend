@@ -136,14 +136,9 @@ If everything is set up correctly, the response should be:
 
 #### Postman Snapshots
 
-1. **Request Setup in Postman:**
+1. **Request and Response:**
 
-   ![Postman Request](https://user-images.githubusercontent.com/your-username/postman-request.png)
-
-2. **Response in Postman:**
-
-   ![Postman Response](https://user-images.githubusercontent.com/your-username/postman-response.png)
-
+   ![Postman Request](https://github.com/Harsh5225/-llm-chat-backend/blob/main/uploads/req-res.png)
 ---
 
 ## Error Handling
