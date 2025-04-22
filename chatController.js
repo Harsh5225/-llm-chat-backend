@@ -8,7 +8,7 @@ export const aiChat = async (req, res) => {
     // name,id,msg aayega body mai
     const { id, name, msg } = req.body;
 
-    //! Step 1: Find the user and their previous messages
+    //! Find the user and their previous messages
     let user = await User.findById(id).populate({
       path: "chatHistory",
       options: { sort: { timestamp: 1 } },
@@ -19,7 +19,7 @@ export const aiChat = async (req, res) => {
       user = await User.create({ _id: id, name: name });
     }
 
-    // Step 2: Create and save user message
+    // Create and save user message
     const userMessage = await Message.create({
       role: "user",
       content: msg,
@@ -27,7 +27,7 @@ export const aiChat = async (req, res) => {
 
     user.chatHistory.push(userMessage);
 
-    // Step 3: Prepare the conversation history structure for the AI model
+    // structure format of message to gemini api
 
     const chatHistory = user.chatHistory.map((message) => {
       return {
@@ -36,7 +36,7 @@ export const aiChat = async (req, res) => {
       };
     });
 
-    // Step 3: Simulate model response (you’ll call Gemini API here)
+    // call gemin api
     const modelReply = await main(chatHistory);
 
     const modelMessage = await Message.create({
