@@ -46,7 +46,7 @@ export const aiChat = async (req, res) => {
 
     user.chatHistory.push(modelMessage);
 
-    // Step 4: Save updated user document
+    //  Save updated user document
     await user.save();
 
     res.json({ reply: modelReply,user });
