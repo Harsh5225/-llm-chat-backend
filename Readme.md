@@ -1,4 +1,3 @@
-Here's a **detailed README** for your **LLM Chat Backend** with all the necessary sections, including Postman snapshots:
 
 ---
 
