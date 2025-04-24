@@ -5,7 +5,7 @@
 
 ## Overview
 
-The **LLM Chat Backend** is an AI-powered chatbot service built using Node.js and Express. It integrates with Google Gemini's AI model to generate human-like responses. This backend application stores user messages and chat history in MongoDB and uses MongoDB's auto-generated `_id` for user identification.
+The **LLM Chat Backend** is an AI-powered chatbot service built using Node.js and Express. It integrates with Google Gemini's AI model to generate human-like responses. This backend application stores user messages and chat history in MongoDB.
 
 The backend API receives messages, processes them using the Gemini model, and returns AI-generated responses. It is designed for easy integration with a frontend application in the future.
 
