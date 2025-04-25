@@ -15,7 +15,7 @@ export const main = async (msg) => {
   return response.text;
 };
 
-//todo Structure of a Message in Gemini Chat API
+//! Structure of a Message in Gemini Chat API
 
 /*
 {
