@@ -13,6 +13,7 @@ export const main = async (msg) => {
 
   console.log(response.text); // Log before return
   return response.text;
+  
 };
 
 //! Structure of a Message in Gemini Chat API
