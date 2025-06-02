@@ -12,7 +12,9 @@ dotenv.config();
 
 // Enable CORS
 app.use(cors({
-  origin: "*",
+  origin: process.env.NODE_ENV === "production" 
+    ? process.env.CLIENT_URL 
+    : "http://localhost:5173",
   methods: ["GET", "POST", "DELETE"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
