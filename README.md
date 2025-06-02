@@ -157,5 +157,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-Made with ❤️ by [Your Name](https://github.com/Harsh5225)
+Made with ❤️ by [Harsh](https://github.com/Harsh5225)
 
