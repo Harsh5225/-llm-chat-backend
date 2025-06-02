@@ -34,11 +34,15 @@ const Register = () => {
 
     try {
       // Send registration request
-      await axios.post('http://localhost:3000/api/users/register', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
-      });
+      await axios.post(
+        // 'http://localhost:3000/api/users/register',
+        'https://llm-chat-backend-51h7.onrender.com/api/users/register',
+        {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        }
+      );
       
       // Redirect to login with success message
       navigate('/login', { 

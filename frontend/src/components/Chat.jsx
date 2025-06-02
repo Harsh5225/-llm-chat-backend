@@ -5,6 +5,8 @@ import axios from "axios";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+const API_URL = import.meta.env.VITE_API_URL || "https://llm-chat-backend-51h7.onrender.com";
+
 const Chat = ({ onLogout }) => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -59,9 +61,7 @@ const Chat = ({ onLogout }) => {
 
   const fetchChatHistory = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/chat/history"
-      );
+      const response = await axios.get(`${API_URL}/api/chat/history`);
       if (response.data.chatHistory && response.data.chatHistory.length > 0) {
         setMessages(
           response.data.chatHistory.map((msg) => ({
@@ -100,9 +100,12 @@ const Chat = ({ onLogout }) => {
 
     try {
       // Send request to backend
-      const response = await axios.post("http://localhost:3000/api/chat", {
-        msg: message,
-      });
+      const response = await axios.post(
+        `${API_URL}/api/chat`,
+        {
+          msg: message,
+        }
+      );
 
       // Add AI response to the chat
       const aiMessage = {
@@ -157,7 +160,7 @@ const Chat = ({ onLogout }) => {
 
   const clearChat = async () => {
     try {
-      await axios.delete("http://localhost:3000/api/chat/history");
+      await axios.delete(`${API_URL}/api/chat/history`);
       setMessages([
         {
           role: "model",
@@ -365,5 +368,9 @@ const Chat = ({ onLogout }) => {
 };
 
 export default Chat;
+
+
+
+
 
 

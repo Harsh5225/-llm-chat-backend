@@ -34,7 +34,11 @@ const Login = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:3000/api/users/login', formData);
+      const response = await axios.post(
+        // 'http://localhost:3000/api/users/login', 
+        'https://llm-chat-backend-51h7.onrender.com/api/users/login',
+        formData
+      );
       
       // Save user info and token to localStorage
       localStorage.setItem('userInfo', JSON.stringify(response.data));
