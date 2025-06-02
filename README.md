@@ -40,7 +40,7 @@ A full-stack AI chat application powered by Google's Gemini model with persisten
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v14 or higher)
+- Node.js 
 - MongoDB (local or Atlas)
 - Google Gemini API key
 
