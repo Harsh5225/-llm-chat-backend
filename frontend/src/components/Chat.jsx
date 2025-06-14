@@ -1,11 +1,13 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import axios from "axios";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://llm-chat-backend-51h7.onrender.com";
+const API_URL =
+  import.meta.env.VITE_API_URL || "https://llm-chat-backend-51h7.onrender.com";
 
 const Chat = ({ onLogout }) => {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ const Chat = ({ onLogout }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [apiError, setApiError] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -61,6 +64,9 @@ const Chat = ({ onLogout }) => {
 
   const fetchChatHistory = async () => {
     try {
+      setIsLoading(true);
+      setApiError(null);
+
       const response = await axios.get(`${API_URL}/api/chat/history`);
       if (response.data.chatHistory && response.data.chatHistory.length > 0) {
         setMessages(
@@ -82,6 +88,17 @@ const Chat = ({ onLogout }) => {
       }
     } catch (error) {
       console.error("Error fetching chat history:", error);
+      setApiError("Failed to load chat history. Please try again later.");
+
+      // Handle unauthorized error
+      if (error.response?.status === 401) {
+        localStorage.removeItem("userInfo");
+        navigate("/login", {
+          state: { message: "Session expired. Please log in again." },
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -100,12 +117,9 @@ const Chat = ({ onLogout }) => {
 
     try {
       // Send request to backend
-      const response = await axios.post(
-        `${API_URL}/api/chat`,
-        {
-          msg: message,
-        }
-      );
+      const response = await axios.post(`${API_URL}/api/chat`, {
+        msg: message,
+      });
 
       // Add AI response to the chat
       const aiMessage = {
@@ -183,7 +197,7 @@ const Chat = ({ onLogout }) => {
         className={`${
           darkMode
             ? "bg-gradient-to-r from-purple-900 to-indigo-900"
-            : "bg-gradient-to-r from-blue-600 to-purple-600"
+            : "bg-gradient-to-r from-blue-400 to-violet-800"
         } text-white p-4 shadow-md`}
       >
         <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -191,7 +205,7 @@ const Chat = ({ onLogout }) => {
           <div className="flex items-center space-x-4">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-300/20 dark:hover:bg-gray-700/50 transition-colors"
               aria-label={
                 darkMode ? "Switch to light mode" : "Switch to dark mode"
               }
@@ -236,14 +250,25 @@ const Chat = ({ onLogout }) => {
             <div className="relative group">
               <button className="bg-gray border border-gray-400 bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-1">
                 <span>Menu</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
               <div
-                className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg ${
+                className={`absolute right-0 mt-3 w-48 rounded-md shadow-lg ${
                   darkMode ? "bg-gray-800" : "bg-white"
-                } ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out z-10`}
+                } ring-1 ring-black ring-opacity-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out z-10`}
                 style={{ transform: "translateY(10px)", top: "100%" }}
               >
                 <div className="py-1" role="menu" aria-orientation="vertical">
@@ -257,8 +282,19 @@ const Chat = ({ onLogout }) => {
                     role="menuitem"
                   >
                     <div className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
                       </svg>
                       Clear Chat History
                     </div>
@@ -274,8 +310,19 @@ const Chat = ({ onLogout }) => {
                     role="menuitem"
                   >
                     <div className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
                       </svg>
                       Logout
                     </div>
@@ -293,23 +340,25 @@ const Chat = ({ onLogout }) => {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2">
             {messages.map((message, index) => (
-              <div 
-                key={index} 
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              <div
+                key={index}
+                className={`flex ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                }`}
               >
-                <div 
+                <div
                   className={`max-w-3/4 rounded-lg p-4 ${
-                    message.role === 'user' 
-                      ? darkMode 
-                        ? 'bg-indigo-800 text-white rounded-br-none' 
-                        : 'bg-blue-600 text-white rounded-br-none'
+                    message.role === "user"
+                      ? darkMode
+                        ? "bg-indigo-800 text-white rounded-br-none"
+                        : "bg-blue-600 text-white rounded-br-none"
                       : darkMode
-                        ? 'bg-gray-800 text-white rounded-bl-none shadow-md' 
-                        : 'bg-white text-gray-800 rounded-bl-none shadow-md'
+                      ? "bg-gray-800 text-white rounded-bl-none shadow-md"
+                      : "bg-white text-gray-800 rounded-bl-none shadow-md"
                   }`}
                 >
-                  {message.role === 'model' ? (
-                    <ReactMarkdown 
+                  {message.role === "model" ? (
+                    <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       className="markdown-content whitespace-pre-wrap"
                     >
@@ -368,9 +417,3 @@ const Chat = ({ onLogout }) => {
 };
 
 export default Chat;
-
-
-
-
-
-
