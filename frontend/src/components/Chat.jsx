@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import axios from "axios";
@@ -17,6 +18,7 @@ const Chat = ({ onLogout }) => {
   const [user, setUser] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [apiError, setApiError] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -66,7 +68,6 @@ const Chat = ({ onLogout }) => {
     try {
       setIsLoading(true);
       setApiError(null);
-
       const response = await axios.get(`${API_URL}/api/chat/history`);
       if (response.data.chatHistory && response.data.chatHistory.length > 0) {
         setMessages(
@@ -89,7 +90,6 @@ const Chat = ({ onLogout }) => {
     } catch (error) {
       console.error("Error fetching chat history:", error);
       setApiError("Failed to load chat history. Please try again later.");
-
       // Handle unauthorized error
       if (error.response?.status === 401) {
         localStorage.removeItem("userInfo");
@@ -126,11 +126,9 @@ const Chat = ({ onLogout }) => {
         role: "model",
         content: response.data.reply || "Sorry, I couldn't process that.",
       };
-
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("Error sending message:", error);
-
       // Handle unauthorized error
       if (error.response?.status === 401) {
         localStorage.removeItem("userInfo");
@@ -155,15 +153,12 @@ const Chat = ({ onLogout }) => {
   const handleLogout = () => {
     // Clear user data from localStorage
     localStorage.removeItem("userInfo");
-
     // Remove authorization header
     delete axios.defaults.headers.common["Authorization"];
-
     // Call the onLogout prop if provided
     if (onLogout) {
       onLogout();
     }
-
     // Navigate to login page
     navigate("/login");
   };
@@ -178,9 +173,10 @@ const Chat = ({ onLogout }) => {
       setMessages([
         {
           role: "model",
-          content: `Chat history cleared. How can I assist you today?`,
+          content: "Chat history cleared. How can I assist you today?",
         },
       ]);
+      setIsMobileMenuOpen(false);
     } catch (error) {
       console.error("Error clearing chat history:", error);
     }
@@ -188,230 +184,434 @@ const Chat = ({ onLogout }) => {
 
   return (
     <div
-      className={`flex flex-col h-screen ${
-        darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-800"
+      className={`flex flex-col h-screen transition-colors duration-300 ${
+        darkMode 
+          ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" 
+          : "bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50"
       }`}
     >
       {/* Header */}
       <header
-        className={`${
+        className={`backdrop-blur-xl border-b transition-all duration-300 ${
           darkMode
-            ? "bg-gradient-to-r from-purple-900 to-indigo-900"
-            : "bg-gradient-to-r from-blue-400 to-violet-800"
-        } text-white p-4 shadow-md`}
+            ? "bg-gray-900/80 border-gray-700/50 shadow-xl shadow-purple-500/10"
+            : "bg-white/80 border-gray-200/50 shadow-xl shadow-blue-500/10"
+        }`}
       >
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">AI Chat Assistant</h1>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-gray-300/20 dark:hover:bg-gray-700/50 transition-colors"
-              aria-label={
-                darkMode ? "Switch to light mode" : "Switch to dark mode"
-              }
-            >
-              {darkMode ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414 1.414zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
-                    clipRule="evenodd"
-                  />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 sm:h-20">
+            {/* Logo and Title */}
+            <div className="flex items-center space-x-3">
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${
+                darkMode 
+                  ? "bg-gradient-to-br from-purple-500 to-indigo-600" 
+                  : "bg-gradient-to-br from-blue-500 to-purple-600"
+              }`}>
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                </svg>
-              )}
-            </button>
-            <div className="flex items-center space-x-2">
-              <img
-                src={
-                  user?.avatar ||
-                  `https://ui-avatars.com/api/?name=${
-                    user?.name || "User"
-                  }&background=random&color=fff`
-                }
-                alt="User Avatar"
-                className="h-8 w-8 rounded-full border-2 border-white"
-              />
-              <span className="font-medium">{user?.name || "User"}</span>
-            </div>
-            <div className="relative group">
-              <button className="bg-gray border border-gray-400 bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-1">
-                <span>Menu</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              <div
-                className={`absolute right-0 mt-3 w-48 rounded-md shadow-lg ${
-                  darkMode ? "bg-gray-800" : "bg-white"
-                } ring-1 ring-black ring-opacity-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out z-10`}
-                style={{ transform: "translateY(10px)", top: "100%" }}
-              >
-                <div className="py-1" role="menu" aria-orientation="vertical">
-                  <button
-                    onClick={clearChat}
-                    className={`block w-full text-left px-4 py-2 text-sm ${
-                      darkMode
-                        ? "text-gray-300 hover:bg-gray-700"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                    role="menuitem"
-                  >
-                    <div className="flex items-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                      Clear Chat History
-                    </div>
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className={`block w-full text-left px-4 py-2 text-sm ${
-                      darkMode
-                        ? "text-gray-300 hover:bg-gray-700"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                    type="button"
-                    role="menuitem"
-                  >
-                    <div className="flex items-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                        />
-                      </svg>
-                      Logout
-                    </div>
-                  </button>
-                </div>
+              </div>
+              <div>
+                <h1 className={`text-lg sm:text-xl lg:text-2xl font-bold ${
+                  darkMode ? "text-white" : "text-gray-900"
+                }`}>
+                  AI Assistant
+                </h1>
+                <p className={`text-xs sm:text-sm ${
+                  darkMode ? "text-gray-400" : "text-gray-500"
+                } hidden sm:block`}>
+                  Powered by AI
+                </p>
               </div>
             </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-4">
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className={`p-2.5 rounded-xl transition-all duration-200 ${
+                  darkMode
+                    ? "bg-gray-800 hover:bg-gray-700 text-yellow-400"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                }`}
+                aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {darkMode ? (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                  </svg>
+                )}
+              </button>
+
+              {/* User Info */}
+              <div className="flex items-center space-x-3">
+                <img
+                  src={
+                    user?.avatar ||
+                    `https://ui-avatars.com/api/?name=${
+                      user?.name || "User"
+                    }&background=random&color=fff&size=128`
+                  }
+                  alt="User Avatar"
+                  className="w-10 h-10 rounded-full border-2 border-white shadow-lg"
+                />
+                <div className="hidden lg:block">
+                  <p className={`text-sm font-semibold ${
+                    darkMode ? "text-white" : "text-gray-900"
+                  }`}>
+                    {user?.name || "User"}
+                  </p>
+                  <p className={`text-xs ${
+                    darkMode ? "text-gray-400" : "text-gray-500"
+                  }`}>
+                    Online
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={clearChat}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    darkMode
+                      ? "bg-gray-800 hover:bg-gray-700 text-gray-300"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  Clear Chat
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    darkMode
+                      ? "bg-red-900/50 hover:bg-red-800/50 text-red-300"
+                      : "bg-red-50 hover:bg-red-100 text-red-600"
+                  }`}
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`md:hidden p-2 rounded-xl transition-colors ${
+                darkMode
+                  ? "bg-gray-800 hover:bg-gray-700 text-white"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+              }`}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className={`md:hidden border-t py-4 space-y-3 ${
+              darkMode ? "border-gray-700" : "border-gray-200"
+            }`}>
+              <div className="flex items-center space-x-3 px-2">
+                <img
+                  src={
+                    user?.avatar ||
+                    `https://ui-avatars.com/api/?name=${
+                      user?.name || "User"
+                    }&background=random&color=fff&size=128`
+                  }
+                  alt="User Avatar"
+                  className="w-10 h-10 rounded-full border-2 border-white shadow-lg"
+                />
+                <div>
+                  <p className={`text-sm font-semibold ${
+                    darkMode ? "text-white" : "text-gray-900"
+                  }`}>
+                    {user?.name || "User"}
+                  </p>
+                  <p className={`text-xs ${
+                    darkMode ? "text-gray-400" : "text-gray-500"
+                  }`}>
+                    Online
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between px-2">
+                <button
+                  onClick={toggleTheme}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                    darkMode
+                      ? "bg-gray-800 hover:bg-gray-700 text-gray-300"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  {darkMode ? (
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                    </svg>
+                  )}
+                  <span className="text-sm">
+                    {darkMode ? "Light Mode" : "Dark Mode"}
+                  </span>
+                </button>
+              </div>
+
+              <div className="flex flex-col space-y-2 px-2">
+                <button
+                  onClick={clearChat}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    darkMode
+                      ? "bg-gray-800 hover:bg-gray-700 text-gray-300"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Clear Chat</span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    darkMode
+                      ? "bg-red-900/50 hover:bg-red-800/50 text-red-300"
+                      : "bg-red-50 hover:bg-red-100 text-red-600"
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Chat container */}
+      {/* Chat Container */}
       <div className="flex-1 overflow-hidden">
-        <div className="max-w-6xl mx-auto h-full flex flex-col p-4">
+        <div className="max-w-4xl mx-auto h-full flex flex-col p-4 sm:p-6">
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2">
+          <div className="flex-1 overflow-y-auto mb-6 space-y-4 sm:space-y-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+            {apiError && (
+              <div className={`p-4 rounded-xl border ${
+                darkMode
+                  ? "bg-red-900/20 border-red-800 text-red-300"
+                  : "bg-red-50 border-red-200 text-red-700"
+              }`}>
+                <p className="text-sm">{apiError}</p>
+              </div>
+            )}
+
             {messages.map((message, index) => (
               <div
                 key={index}
                 className={`flex ${
                   message.role === "user" ? "justify-end" : "justify-start"
-                }`}
+                } animate-fadeIn`}
               >
                 <div
-                  className={`max-w-3/4 rounded-lg p-4 ${
+                  className={`max-w-[85%] sm:max-w-[75%] lg:max-w-[65%] rounded-2xl px-4 py-3 sm:px-6 sm:py-4 shadow-lg transition-all duration-200 hover:shadow-xl ${
                     message.role === "user"
                       ? darkMode
-                        ? "bg-indigo-800 text-white rounded-br-none"
-                        : "bg-blue-600 text-white rounded-br-none"
+                        ? "bg-gradient-to-br from-purple-600 to-indigo-700 text-white rounded-br-md"
+                        : "bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-br-md"
                       : darkMode
-                      ? "bg-gray-800 text-white rounded-bl-none shadow-md"
-                      : "bg-white text-gray-800 rounded-bl-none shadow-md"
+                      ? "bg-gray-800/80 backdrop-blur-sm text-gray-100 rounded-bl-md border border-gray-700/50"
+                      : "bg-white/80 backdrop-blur-sm text-gray-800 rounded-bl-md border border-gray-200/50"
                   }`}
                 >
                   {message.role === "model" ? (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      className="markdown-content whitespace-pre-wrap"
-                    >
-                      {message.content}
-                    </ReactMarkdown>
+                    <div className="prose prose-sm sm:prose max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        className={`markdown-content ${
+                          darkMode ? "prose-invert" : ""
+                        }`}
+                        components={{
+                          code: ({ node, inline, className, children, ...props }) => {
+                            return inline ? (
+                              <code
+                                className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                                  darkMode
+                                    ? "bg-gray-700 text-purple-300"
+                                    : "bg-gray-100 text-purple-600"
+                                }`}
+                                {...props}
+                              >
+                                {children}
+                              </code>
+                            ) : (
+                              <pre
+                                className={`p-3 rounded-lg overflow-x-auto text-sm ${
+                                  darkMode
+                                    ? "bg-gray-900 text-gray-100"
+                                    : "bg-gray-50 text-gray-800"
+                                }`}
+                              >
+                                <code {...props}>{children}</code>
+                              </pre>
+                            );
+                          },
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
                   ) : (
-                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed">
+                      {message.content}
+                    </p>
                   )}
                 </div>
               </div>
             ))}
+
+            {isLoading && (
+              <div className="flex justify-start animate-fadeIn">
+                <div
+                  className={`max-w-[85%] sm:max-w-[75%] lg:max-w-[65%] rounded-2xl px-4 py-3 sm:px-6 sm:py-4 rounded-bl-md ${
+                    darkMode
+                      ? "bg-gray-800/80 backdrop-blur-sm border border-gray-700/50"
+                      : "bg-white/80 backdrop-blur-sm border border-gray-200/50"
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <div className={`w-2 h-2 rounded-full animate-bounce ${
+                        darkMode ? "bg-purple-400" : "bg-blue-500"
+                      }`} style={{ animationDelay: "0ms" }}></div>
+                      <div className={`w-2 h-2 rounded-full animate-bounce ${
+                        darkMode ? "bg-purple-400" : "bg-blue-500"
+                      }`} style={{ animationDelay: "150ms" }}></div>
+                      <div className={`w-2 h-2 rounded-full animate-bounce ${
+                        darkMode ? "bg-purple-400" : "bg-blue-500"
+                      }`} style={{ animationDelay: "300ms" }}></div>
+                    </div>
+                    <span className={`text-sm ${
+                      darkMode ? "text-gray-400" : "text-gray-500"
+                    }`}>
+                      AI is thinking...
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input form */}
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Type your message..."
-              className={`flex-1 p-3 border rounded-full focus:outline-none focus:ring-2 shadow-sm ${
-                darkMode
-                  ? "bg-gray-800 border-gray-700 text-white focus:ring-purple-500"
-                  : "bg-white border-gray-300 text-gray-800 focus:ring-blue-500"
-              }`}
-              disabled={isLoading}
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !inputMessage.trim()}
-              className={`p-3 rounded-full ${
-                isLoading || !inputMessage.trim()
-                  ? darkMode
-                    ? "bg-gray-700 cursor-not-allowed"
-                    : "bg-gray-400 cursor-not-allowed"
-                  : darkMode
-                  ? "bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800"
-                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              } text-white shadow-sm transition-colors duration-200`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+          {/* Input Form */}
+          <div className={`backdrop-blur-xl rounded-2xl p-4 border transition-all duration-300 ${
+            darkMode
+              ? "bg-gray-800/50 border-gray-700/50"
+              : "bg-white/50 border-gray-200/50"
+          }`}>
+            <form onSubmit={handleSubmit} className="flex gap-3 sm:gap-4">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  placeholder="Type your message..."
+                  className={`w-full px-4 py-3 sm:px-6 sm:py-4 rounded-xl border-0 focus:outline-none focus:ring-2 transition-all duration-200 text-sm sm:text-base ${
+                    darkMode
+                      ? "bg-gray-700/50 text-white placeholder-gray-400 focus:ring-purple-500/50"
+                      : "bg-gray-50/50 text-gray-900 placeholder-gray-500 focus:ring-blue-500/50"
+                  }`}
+                  disabled={isLoading}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading || !inputMessage.trim()}
+                className={`px-4 py-3 sm:px-6 sm:py-4 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                  isLoading || !inputMessage.trim()
+                    ? darkMode
+                      ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : darkMode
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-purple-500/25"
+                    : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-blue-500/25"
+                }`}
               >
-                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-              </svg>
-            </button>
-          </form>
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
+                </svg>
+              </button>
+            </form>
+          </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        
+        .scrollbar-thin {
+          scrollbar-width: thin;
+        }
+        
+        .scrollbar-thumb-gray-300::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .scrollbar-thumb-gray-300::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+          background-color: #d1d5db;
+          border-radius: 3px;
+        }
+        
+        .dark .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+          background-color: #4b5563;
+        }
+        
+        .prose code {
+          font-size: 0.875em;
+        }
+        
+        .prose pre {
+          font-size: 0.875em;
+        }
+      `}</style>
     </div>
   );
 };
